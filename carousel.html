@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>轮播图</title>
+	<script src="https://cdn.bootcss.com/jquery/1.11.3/jquery.js"></script>
+	<style>
+		*{margin:0;padding:0;}
+		#main{
+			width:1000px;
+			margin:0 auto;
+		}
+		#banner{
+			width:1000px;
+			overflow:hidden;
+			position:relative;
+		}
+		#ul-imgs{
+			list-style:none;
+		}
+		#ul-imgs.transition{
+			transition:all .5s linear;
+		}
+		#ul-imgs>li{
+			width:1000px;
+			float:left;
+		}
+		#ul-imgs img{
+			width:1000px;
+		}
+		#ul-idxs{
+			width:100px;
+			margin:0 auto;
+			list-style: none;
+			position:absolute;
+			bottom:25px;
+			left:50%;
+			margin-left:-50px;
+		}
+		#ul-idxs>li{
+			float:left;
+			width:10px;height:10px;
+			background-color:#fff;
+			border-radius:5px;
+			margin:0 5px;
+			cursor:pointer;
+		}
+		#ul-idxs>li.active{
+			background-color:blue;
+		}
+		#btn-left,#btn-right{
+			width:60px;
+			height:100%;
+			position:absolute;
+			top:0;
+			background-repeat:no-repeat;
+			background-position:center;
+			cursor:pointer;
+		}
+		#btn-left{
+      left:20px;
+      background-image:url(image/carousel_item/left_ar.png);
+    }
+    #btn-right{
+      right:20px;
+      background-image:url(image/carousel_item/right_ar.png);
+    }
+    #btn-left:hover,#btn-right:hover{
+      background-size:40px 70px
+    }
+	</style>
+</head>
+<body>
+	<div id="main">
+		<div id="banner">
+			<div id="btn-left"></div>
+			<ul id="ul-imgs" style="width:5000px;margin-left:0px;">
+				<li><a href="javascript:"><img src="image/carousel_item/carousel-1.jpg" alt=""></a></li>
+				<li><a href="javascript:"><img src="image/carousel_item/carousel-2.jpg" alt=""></a></li>
+				<li><a href="javascript:"><img src="image/carousel_item/carousel-3.jpg" alt=""></a></li>
+				<li><a href="javascript:"><img src="image/carousel_item/carousel-4.jpg" alt=""></a></li>
+				<li><a href="javascript:"><img src="image/carousel_item/carousel-1.jpg" alt=""></a></li>
+			</ul>
+			<ul id="ul-idxs">
+				<li class="active"></li>
+				<li></li>
+				<li></li>
+				<li></li>
+			</ul>
+			<div id="btn-right"></div>
+		</div>
+	</div>
+</body>
+<script>
+	var i=0;//当前轮播的第几张图片
+	var liWidth=1000;//每张图片的宽度
+	var liCount=4;//轮播指示灯的个数,也相当于用户实际看到图片的个数
+    var DURATION=500;//轮播间隔时间
+    // 定义的轮播函数
+	function moveTo(to){
+		// 如果不给轮播图传参数的话,默认是向右边移动一次
+		if(to==undefined) to=i+1;
+		if(i==0){
+			// 如果是第一张图片的情况下,添加过渡效果
+	     if(to>i){
+	       $('#ul-imgs').addClass('transition');
+	     }else{
+	     	// 第一张图片的情况下,用户点击往左边走的话,欺骗用户,去掉过渡效果,把整体
+	     	// 右移动,调到最后,
+	       $('#ul-imgs').removeClass('transition');
+	       $('#ul-imgs').css('margin-left',-liCount*liWidth+'px');
+	       // 使用定时器,制造时间间隔,使用户看不到突然向右边移动的效果
+	       setTimeout(function(){
+	         moveTo(liCount-1);
+	       },100);
+	       return;
+	     }
+	    }
+	    // 如果有参数传进来的情况下,将参数值赋值给to
+		i=to;
+		// 将图片向右边移动相互对应的间隔
+		$('#ul-imgs').css('margin-left',-i*liWidth+'px');
+		// 如果轮播图图片到了最后一张的情况下,将i设置成0,重新将整体图片位置调整到左边起始位置
+		if(i==liCount){
+			i=0;
+			setTimeout(function(){
+				// 去掉过度效果,让用户看不到,图片整体右移动
+				$('#ul-imgs').removeClass('transition');
+				$('#ul-imgs').css('margin-left','0px');
+			},DURATION);
+		}
+		$('#ul-idxs>li').eq(i).addClass('active').siblings().removeClass('active');
+		// 给下面相对应的指示器点亮
+	}
+	// 设置一个变量,防止用户不停的点击俩边的按钮,造成定时器时间叠加,造成混乱
+	var canClick=true;
+	// 点击右边的按钮,向右边移动一次
+	$('#btn-right').click(function(){
+		move(1);
+	});
+	// 定义的函数,传进一个参数,移动相对应的位置
+	function move(n){
+		if(canClick){
+			moveTo(i+n);
+			canClick=false;
+			setTimeout(function(){
+				canClick=true;
+			},DURATION+100);
+		}
+	}
+	// 点击左边的图片向左边移动一次
+	$('#btn-left').click(function(){
+		move(-1);
+	});
+	// 设置定时器,每三秒轮播一次
+	var timer=setInterval(function(){
+		moveTo();
+	},3000);
+	// 当鼠标移动到div上的时候停止定时器
+	$('#banner').mouseover(function(){
+		clearInterval(timer);
+	});
+	// 鼠标移出的时候开始定时器
+	$('#banner').mouseout(function(){
+		timer=setInterval(function(){
+			moveTo();
+		},3000);
+	});
+	// 点击下面的指示器,轮播到对应的指示灯上去,并且点亮
+	$('#ul-idxs').on('click','li',function(){
+		if(canClick){
+			if($(this).prop('className')!='active'){
+				// 找到那个点击的指示灯
+				var i=$('#ul-idxs>li').index($(this));
+				// 轮播到那个指示灯所对应的图片的位置
+				moveTo(i);
+			}
+			// 设置时间间隔防止恶意点击
+			setTimeout(function(){
+				canClick=true;
+			},500);
+		}
+	})
+</script>
+</html>
